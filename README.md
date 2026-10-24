@@ -2,6 +2,9 @@
 
 > **Discrete Mathematics College Examination Scheduling & Vacant Classroom Allocation System**
 
+🌐 **Live Public Website:** [https://prathamesh-salunke.github.io/ExamForge/](https://prathamesh-salunke.github.io/ExamForge/)
+
+[![Live Deployment](https://img.shields.io/badge/Live%20Demo-Online-success?style=flat&logo=github)](https://prathamesh-salunke.github.io/ExamForge/)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
 [![Tests](https://img.shields.io/badge/tests-18%20passed-emerald.svg)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-ES2020-blue.svg)]()
