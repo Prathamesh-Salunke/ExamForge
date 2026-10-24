@@ -28,6 +28,26 @@ export const GraphVisualization: React.FC<GraphVisualizationProps> = ({
   const svgRef = useRef<SVGSVGElement>(null);
   const [nodePositions, setNodePositions] = useState<Record<string, NodePosition>>({});
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
+  const [animatedStepIndex, setAnimatedStepIndex] = useState<number | null>(null);
+  const [isSimulating, setIsSimulating] = useState<boolean>(false);
+
+  // Animate coloring progression
+  const triggerColoringAnimation = () => {
+    if (!coloringResult || coloringResult.algorithmSteps.length === 0 || isSimulating) return;
+    setIsSimulating(true);
+    setAnimatedStepIndex(0);
+
+    const steps = coloringResult.algorithmSteps;
+    steps.forEach((step, idx) => {
+      setTimeout(() => {
+        setSelectedNodeId(step.vertexId);
+        setAnimatedStepIndex(idx);
+        if (idx === steps.length - 1) {
+          setTimeout(() => setIsSimulating(false), 800);
+        }
+      }, (idx + 1) * 600);
+    });
+  };
 
   // Initialize circular layout for nodes
   useEffect(() => {
@@ -120,31 +140,41 @@ export const GraphVisualization: React.FC<GraphVisualizationProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => setZoomLevel((z) => Math.min(z + 0.15, 1.8))}
-              className="p-1.5 rounded-lg hover:bg-white text-slate-600 transition"
-              title="Zoom In"
+              onClick={triggerColoringAnimation}
+              disabled={isSimulating}
+              className="px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-[#438DFF] to-[#A78BFA] hover:opacity-90 rounded-xl shadow-xs transition disabled:opacity-50 flex items-center gap-1.5"
             >
-              <ZoomIn className="w-4 h-4" />
+              <span>{isSimulating ? 'Animating Algorithm...' : '▶ Play Coloring Trace'}</span>
             </button>
-            <button
-              onClick={() => setZoomLevel((z) => Math.max(z - 0.15, 0.6))}
-              className="p-1.5 rounded-lg hover:bg-white text-slate-600 transition"
-              title="Zoom Out"
-            >
-              <ZoomOut className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => {
-                setZoomLevel(1);
-                setSelectedNodeId(null);
-              }}
-              className="p-1.5 rounded-lg hover:bg-white text-slate-600 transition"
-              title="Reset Layout & Selection"
-            >
-              <RotateCcw className="w-4 h-4" />
-            </button>
+
+            <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+              <button
+                onClick={() => setZoomLevel((z) => Math.min(z + 0.15, 1.8))}
+                className="p-1.5 rounded-lg hover:bg-white text-slate-600 transition"
+                title="Zoom In"
+              >
+                <ZoomIn className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setZoomLevel((z) => Math.max(z - 0.15, 0.6))}
+                className="p-1.5 rounded-lg hover:bg-white text-slate-600 transition"
+                title="Zoom Out"
+              >
+                <ZoomOut className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => {
+                  setZoomLevel(1);
+                  setSelectedNodeId(null);
+                }}
+                className="p-1.5 rounded-lg hover:bg-white text-slate-600 transition"
+                title="Reset Layout & Selection"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
 

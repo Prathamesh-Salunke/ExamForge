@@ -24,7 +24,7 @@ export const NextExamsPreview: React.FC<{
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
+    <div className="bg-white/90 backdrop-blur-md rounded-3xl border border-white/80 p-6 shadow-md shadow-[#438DFF]/5">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-sm font-bold text-[#0F172A]">Upcoming Examinations Preview</h3>

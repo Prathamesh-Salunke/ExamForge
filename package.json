@@ -17,17 +17,21 @@
   "author": "Prathamesh Salunke",
   "license": "MIT",
   "dependencies": {
+    "@supabase/supabase-js": "^2.118.0",
     "lucide-react": "^1.61.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
+    "three": "^0.186.1",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@types/three": "^0.186.0",
     "@vitejs/plugin-react": "^6.1.2",
     "autoprefixer": "^10.6.1",
+    "happy-dom": "^21.0.4",
     "postcss": "^8.5.31",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.7.0",

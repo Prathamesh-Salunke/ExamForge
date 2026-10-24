@@ -12,8 +12,12 @@ import {
   Download,
   CheckCircle2,
   AlertCircle,
+  LogOut,
+  User,
+  Shield,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../auth/AuthContext';
 
 export type NavTab =
   | 'dashboard'
@@ -29,14 +33,24 @@ interface NavbarProps {
   currentTab: NavTab;
   onSelectTab: (tab: NavTab) => void;
   onOpenExportModal: () => void;
+  onLogout: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   currentTab,
   onSelectTab,
   onOpenExportModal,
+  onLogout,
 }) => {
   const { timetableMetadata, validationReport, resetToDemoData } = useApp();
+  const { user, signOut, authMode } = useAuth();
+
+  const handleLogoutClick = async () => {
+    if (window.confirm('Are you sure you want to log out of ExamForge?')) {
+      await signOut();
+      onLogout();
+    }
+  };
 
   const navItems: { id: NavTab; label: string; icon: React.ReactNode; badge?: string; highlight?: boolean }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: <Calendar className="w-4 h-4" /> },
@@ -60,8 +74,17 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'students', label: 'Students', icon: <Users className="w-4 h-4" /> },
   ];
 
+  const userInitials = user?.name
+    ? user.name
+        .split(' ')
+        .map((p) => p[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase()
+    : 'U';
+
   return (
-    <header className="sticky top-0 z-40 bg-white border-b border-[#E2E8F0] shadow-xs">
+    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-white/60 shadow-xs">
       {/* Top Banner with College Info and Quick Actions */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
@@ -98,7 +121,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right Action Controls */}
           <div className="flex items-center gap-2.5">
-            <div className="hidden lg:flex items-center gap-2 px-3 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600">
+            <div className="hidden xl:flex items-center gap-2 px-3 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600">
               <span className="font-semibold text-slate-800">{timetableMetadata.semesterName}</span>
               <span className="text-slate-300">|</span>
               <span className="text-slate-500">Status:</span>
@@ -136,12 +159,40 @@ export const Navbar: React.FC<NavbarProps> = ({
               <RotateCcw className="w-3.5 h-3.5" />
               <span className="hidden md:inline">Reset Demo</span>
             </button>
+
+            {/* Authenticated User Profile Badge & Logout Button */}
+            {user && (
+              <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+                <div className="flex items-center gap-2 py-1 px-2.5 bg-white border border-slate-200 rounded-xl shadow-xs">
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#438DFF] to-[#A78BFA] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                    {userInitials}
+                  </div>
+                  <div className="hidden md:block text-left">
+                    <div className="text-xs font-bold text-[#0F172A] line-clamp-1 max-w-[140px]">
+                      {user.name}
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-mono line-clamp-1 max-w-[140px] flex items-center gap-1">
+                      <Shield className="w-2.5 h-2.5 text-emerald-500" />
+                      <span>{authMode === 'SUPABASE' ? 'Supabase' : 'Verified'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleLogoutClick}
+                  className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition"
+                  title="Sign Out of ExamForge"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Navigation Tabs Bar */}
-      <nav className="bg-[#FAFBFD] border-t border-slate-200/80 px-4 sm:px-6 lg:px-8">
+      <nav className="bg-white/70 backdrop-blur-sm border-t border-slate-200/80 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex items-center gap-1 sm:gap-2 overflow-x-auto py-2 scrollbar-none">
           {navItems.map((item) => {
             const isActive = currentTab === item.id;

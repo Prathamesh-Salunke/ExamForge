@@ -101,7 +101,7 @@ export const StatCards: React.FC<{
       {stats.map((stat, idx) => (
         <div
           key={idx}
-          className={`bg-white rounded-xl border ${stat.borderColor} p-4 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between`}
+          className={`bg-white/90 backdrop-blur-md rounded-2xl border ${stat.borderColor} p-4 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all flex flex-col justify-between`}
         >
           <div>
             <div className="flex items-center justify-between mb-2">

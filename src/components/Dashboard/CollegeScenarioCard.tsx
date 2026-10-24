@@ -23,7 +23,7 @@ export const CollegeScenarioCard: React.FC<{
   const totalSlotsUsed = coloringResult?.totalColorsUsed || 0;
 
   return (
-    <div className="bg-gradient-to-br from-white via-[#FAFBFD] to-[#EAF4FF]/40 rounded-2xl border border-[#438DFF]/20 p-5 sm:p-6 shadow-xs">
+    <div className="bg-white/90 backdrop-blur-md rounded-3xl border border-white/80 p-6 shadow-md shadow-[#438DFF]/5">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">

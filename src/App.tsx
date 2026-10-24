@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from './auth/AuthContext';
 import { useApp } from './context/AppContext';
 import { Navbar, NavTab } from './components/Navbar';
+import { AcademicThreeBackground } from './components/ThreeBackground/AcademicThreeBackground';
+import { LoginPage } from './components/Auth/LoginPage';
+import { SignupPage } from './components/Auth/SignupPage';
+import { ForgotPasswordPage } from './components/Auth/ForgotPasswordPage';
 import { StatCards } from './components/Dashboard/StatCards';
 import { CollegeScenarioCard } from './components/Dashboard/CollegeScenarioCard';
 import { NextExamsPreview } from './components/Dashboard/NextExamsPreview';
@@ -20,13 +25,14 @@ import {
   AlertTriangle,
   Info,
   Calendar,
-  Sparkles,
-  GitGraph,
-  Search,
+  Loader2,
 } from 'lucide-react';
 
 export const AppContent: React.FC = () => {
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const [authView, setAuthView] = useState<'login' | 'signup' | 'forgot-password'>('login');
   const [currentTab, setCurrentTab] = useState<NavTab>('dashboard');
+  const [redirectAfterLogin, setRedirectAfterLogin] = useState<NavTab>('dashboard');
   const [exportModalOpen, setExportModalOpen] = useState<boolean>(false);
 
   const {
@@ -38,43 +44,175 @@ export const AppContent: React.FC = () => {
     removeToast,
   } = useApp();
 
+  // Sync hash routing if user enters via URL (e.g. #login, #signup, #vacant-rooms)
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '').toLowerCase();
+      if (hash === 'signup') {
+        setAuthView('signup');
+      } else if (hash === 'forgot-password') {
+        setAuthView('forgot-password');
+      } else if (hash === 'login') {
+        setAuthView('login');
+      } else if (
+        [
+          'dashboard',
+          'vacant-rooms',
+          'graph-coloring',
+          'generator',
+          'final-timetable',
+          'subjects',
+          'classrooms',
+          'students',
+        ].includes(hash)
+      ) {
+        if (isAuthenticated) {
+          setCurrentTab(hash as NavTab);
+        } else {
+          setRedirectAfterLogin(hash as NavTab);
+          setAuthView('login');
+        }
+      }
+    };
+
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [isAuthenticated]);
+
+  // Loading Screen to prevent flicker during auth restore
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center relative bg-gradient-to-br from-[#EAF4FF]/60 via-[#F8FAFC] to-[#F5F3FF]/60 font-sans">
+        <AcademicThreeBackground />
+        <div className="p-8 bg-white/90 backdrop-blur-xl border border-white/80 rounded-3xl shadow-xl flex flex-col items-center text-center max-w-sm w-full mx-4 relative z-10">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#438DFF] to-[#A78BFA] flex items-center justify-center text-white mb-4 shadow-lg shadow-[#438DFF]/25 animate-pulse">
+            <Calendar className="w-7 h-7" />
+          </div>
+          <h2 className="text-lg font-bold text-[#0F172A]">ExamForge Verification</h2>
+          <p className="text-xs text-slate-500 mt-1 mb-4">
+            Restoring Academic Examination Session...
+          </p>
+          <Loader2 className="w-6 h-6 text-[#438DFF] animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  // Public Unauthenticated State (Login, Signup, Forgot Password)
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen relative font-sans">
+        <AcademicThreeBackground />
+
+        {authView === 'login' && (
+          <LoginPage
+            onNavigateToSignup={() => {
+              setAuthView('signup');
+              window.location.hash = 'signup';
+            }}
+            onNavigateToForgotPassword={() => {
+              setAuthView('forgot-password');
+              window.location.hash = 'forgot-password';
+            }}
+            onLoginSuccess={() => {
+              setCurrentTab(redirectAfterLogin);
+              window.location.hash = redirectAfterLogin;
+            }}
+          />
+        )}
+
+        {authView === 'signup' && (
+          <SignupPage
+            onNavigateToLogin={() => {
+              setAuthView('login');
+              window.location.hash = 'login';
+            }}
+            onSignupSuccess={() => {
+              setCurrentTab(redirectAfterLogin);
+              window.location.hash = redirectAfterLogin;
+            }}
+          />
+        )}
+
+        {authView === 'forgot-password' && (
+          <ForgotPasswordPage
+            onNavigateToLogin={() => {
+              setAuthView('login');
+              window.location.hash = 'login';
+            }}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // Protected Authenticated Application State
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans">
-      {/* Top Navbar */}
+    <div className="min-h-screen flex flex-col font-sans relative">
+      {/* 3D Animated Background Ambient Environment */}
+      <AcademicThreeBackground />
+
+      {/* Top Navigation */}
       <Navbar
         currentTab={currentTab}
-        onSelectTab={setCurrentTab}
+        onSelectTab={(tab) => {
+          setCurrentTab(tab);
+          window.location.hash = tab;
+        }}
         onOpenExportModal={() => setExportModalOpen(true)}
+        onLogout={() => {
+          setAuthView('login');
+          window.location.hash = 'login';
+        }}
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 relative z-10">
         {/* Tab 1: Dashboard */}
         {currentTab === 'dashboard' && (
           <div className="space-y-6">
-            {/* Stat Cards */}
             <StatCards
-              onNavigateToVacant={() => setCurrentTab('vacant-rooms')}
-              onNavigateToGenerator={() => setCurrentTab('generator')}
-              onNavigateToGraph={() => setCurrentTab('graph-coloring')}
+              onNavigateToVacant={() => {
+                setCurrentTab('vacant-rooms');
+                window.location.hash = 'vacant-rooms';
+              }}
+              onNavigateToGenerator={() => {
+                setCurrentTab('generator');
+                window.location.hash = 'generator';
+              }}
+              onNavigateToGraph={() => {
+                setCurrentTab('graph-coloring');
+                window.location.hash = 'graph-coloring';
+              }}
             />
 
-            {/* College Scenario Explainer */}
             <CollegeScenarioCard
-              onFindVacant={() => setCurrentTab('vacant-rooms')}
-              onGenerate={() => setCurrentTab('generator')}
-              onViewGraph={() => setCurrentTab('graph-coloring')}
+              onFindVacant={() => {
+                setCurrentTab('vacant-rooms');
+                window.location.hash = 'vacant-rooms';
+              }}
+              onGenerate={() => {
+                setCurrentTab('generator');
+                window.location.hash = 'generator';
+              }}
+              onViewGraph={() => {
+                setCurrentTab('graph-coloring');
+                window.location.hash = 'graph-coloring';
+              }}
             />
 
-            {/* Upcoming Next Exams Preview */}
             <NextExamsPreview
               exams={scheduledExams}
-              onViewAll={() => setCurrentTab('final-timetable')}
+              onViewAll={() => {
+                setCurrentTab('final-timetable');
+                window.location.hash = 'final-timetable';
+              }}
             />
           </div>
         )}
 
-        {/* Tab 2: Find Vacant Classrooms (KEY SHOWCASE) */}
+        {/* Tab 2: Find Vacant Classrooms (KEY SHOWCASE FEATURE) */}
         {currentTab === 'vacant-rooms' && <VacantClassroomFinder />}
 
         {/* Tab 3: Graph Coloring & Discrete Mathematics */}
@@ -93,7 +231,10 @@ export const AppContent: React.FC = () => {
         {/* Tab 4: Generate Timetable Workflow */}
         {currentTab === 'generator' && (
           <TimetableGenerator
-            onViewFinalTimetable={() => setCurrentTab('final-timetable')}
+            onViewFinalTimetable={() => {
+              setCurrentTab('final-timetable');
+              window.location.hash = 'final-timetable';
+            }}
           />
         )}
 
@@ -148,7 +289,7 @@ export const AppContent: React.FC = () => {
       </div>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 mt-auto py-5 no-print">
+      <footer className="bg-white/80 backdrop-blur-md border-t border-slate-200 mt-auto py-5 no-print relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
           <div className="flex items-center gap-2">
             <span className="font-bold text-[#0F172A]">ExamForge</span>
@@ -156,7 +297,7 @@ export const AppContent: React.FC = () => {
             <span>Discrete Mathematics Graph Coloring & Classroom Scheduling System</span>
           </div>
           <div className="flex items-center gap-4">
-            <span>Welsh-Powell & DSATUR Algorithms</span>
+            <span>Signed in as: <strong className="text-slate-800">{user?.name}</strong></span>
             <span>•</span>
             <span className="text-emerald-700 font-semibold">100% Collision-Free</span>
           </div>
